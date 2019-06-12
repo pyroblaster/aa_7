@@ -42,7 +42,6 @@ class GridPresenter(private val apiInteractor: MovieInteractor, private val data
                 response.body()?.movies?.run { view.onSuccess(this) }
             }
         }
-
     }
 
     override fun getFavoriteMovies(): ArrayList<Movie> {

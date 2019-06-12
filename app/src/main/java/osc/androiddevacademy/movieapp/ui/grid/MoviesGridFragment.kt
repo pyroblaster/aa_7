@@ -23,18 +23,10 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class MoviesGridFragment : Fragment(), GridContract.View {
-    override fun onSuccess(movies: ArrayList<Movie>) {
-        movies.filter { (id) ->
-            gridPresenter.getFavoriteMovies().any { it.id == id }
-        }.forEach { it.isFavorite = true }
-        movieList.clear()
-        movieList.addAll(movies)
-        gridAdapter.setMovies(movieList)
-    }
 
-    override fun onFailure() {
+    companion object{
+        private var flag = false
     }
-
 
     private val SPAN_COUNT = 2
 
@@ -67,24 +59,37 @@ class MoviesGridFragment : Fragment(), GridContract.View {
         gridPresenter.setView(this)
         favoriteButton.setOnClickListener{onFavoriteButtonClicked()}
         popularButton.setOnClickListener{onPopularButtonClicked()}
-        requestPopularMovies()
+        if(flag == true) requestFavoriteMovies()
+        else requestPopularMovies()
+
     }
 
     override fun onResume() {
         super.onResume()
-        requestPopularMovies()
+        if(flag == true) requestFavoriteMovies()
+        else requestPopularMovies()
     }
 
     fun onFavoriteButtonClicked(){
-        gridPresenter.getFavoriteMovies()
+        requestFavoriteMovies()
+        flag = true
     }
 
     fun onPopularButtonClicked(){
-        gridPresenter.getPopularMovies()
+        requestPopularMovies()
+        flag = false
     }
 
     private fun requestPopularMovies() {
-        apiInteractor.getPopularMovies(popularMoviesCallback())
+        gridPresenter.getPopularMovies()
+    }
+
+    private fun requestFavoriteMovies(){
+        val movies = gridPresenter.getFavoriteMovies()
+        movies.forEach { it.isFavorite = true }
+        movieList.clear()
+        movieList.addAll(movies)
+        gridAdapter.setMovies(movieList)
     }
 
     private fun popularMoviesCallback(): Callback<MoviesResponse> =
@@ -124,5 +129,18 @@ class MoviesGridFragment : Fragment(), GridContract.View {
         gridPresenter.favoriteMovie(movie)
 
     }
+
+    override fun onSuccess(movies: ArrayList<Movie>) {
+        movies.filter { (id) ->
+            gridPresenter.getFavoriteMovies().any { it.id == id }
+        }.forEach { it.isFavorite = true }
+        movieList.clear()
+        movieList.addAll(movies)
+        gridAdapter.setMovies(movieList)
+    }
+
+    override fun onFailure() {
+    }
+
 
 }
