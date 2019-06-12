@@ -15,6 +15,7 @@ import osc.androiddevacademy.movieapp.model.Movie
 import osc.androiddevacademy.movieapp.model.MoviesResponse
 import osc.androiddevacademy.movieapp.networking.BackendFactory
 import osc.androiddevacademy.movieapp.networking.interactors.MovieInteractor
+import osc.androiddevacademy.movieapp.presentation.GridPresenter
 import osc.androiddevacademy.movieapp.ui.pager.MoviesPagerFragment
 import osc.androiddevacademy.movieapp.ui.adapters.MoviesGridAdapter
 import retrofit2.Call
@@ -23,11 +24,15 @@ import retrofit2.Response
 
 class MoviesGridFragment : Fragment(), GridContract.View {
     override fun onSuccess(movies: ArrayList<Movie>) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        movies.filter { (id) ->
+            gridPresenter.getFavoriteMovies().any { it.id == id }
+        }.forEach { it.isFavorite = true }
+        movieList.clear()
+        movieList.addAll(movies)
+        gridAdapter.setMovies(movieList)
     }
 
     override fun onFailure() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
     }
 
 
@@ -40,6 +45,7 @@ class MoviesGridFragment : Fragment(), GridContract.View {
     }
     private val apiInteractor: MovieInteractor by lazy { BackendFactory.getMovieInteractor() }
     private val appDatabase by lazy { MoviesDatabase.getInstance(App.getAppContext()) }
+    private val gridPresenter : GridContract.Presenter by lazy { GridPresenter(BackendFactory.getMovieInteractor(), MoviesDatabase.getInstance(App.getAppContext()))}
 
     private val movieList = arrayListOf<Movie>()
 
@@ -58,13 +64,23 @@ class MoviesGridFragment : Fragment(), GridContract.View {
             adapter = gridAdapter
             layoutManager = GridLayoutManager(context, SPAN_COUNT)
         }
-
+        gridPresenter.setView(this)
+        favoriteButton.setOnClickListener{onFavoriteButtonClicked()}
+        popularButton.setOnClickListener{onPopularButtonClicked()}
         requestPopularMovies()
     }
 
     override fun onResume() {
         super.onResume()
         requestPopularMovies()
+    }
+
+    fun onFavoriteButtonClicked(){
+        gridPresenter.getFavoriteMovies()
+    }
+
+    fun onPopularButtonClicked(){
+        gridPresenter.getPopularMovies()
     }
 
     private fun requestPopularMovies() {
@@ -103,6 +119,9 @@ class MoviesGridFragment : Fragment(), GridContract.View {
     }
 
     private fun onFavoriteClicked(movie: Movie) {
+        movie.isFavorite = !movie.isFavorite
+        gridAdapter.notifyDataSetChanged()
+        gridPresenter.favoriteMovie(movie)
 
     }
 

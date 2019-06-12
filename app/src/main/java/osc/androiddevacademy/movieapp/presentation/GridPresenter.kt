@@ -10,10 +10,10 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class GridPresenter(private val apiInteractor: MovieInteractor) : GridContract.Presenter{
+class GridPresenter(private val apiInteractor: MovieInteractor, private val database: MoviesDatabase) : GridContract.Presenter{
 
     private lateinit var view: GridContract.View
-    private val database:MoviesDatabase = MoviesDatabase.getInstance(App.getAppContext())
+
 
     override fun setView(view: GridContract.View) {
         this.view = view
@@ -45,8 +45,8 @@ class GridPresenter(private val apiInteractor: MovieInteractor) : GridContract.P
 
     }
 
-    override fun returnPopularMovies(): ArrayList<Movie> {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun getFavoriteMovies(): ArrayList<Movie> {
+        return database.moviesDao().getFavoriteMovies() as ArrayList<Movie>
     }
 
 }

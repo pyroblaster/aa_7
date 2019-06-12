@@ -12,19 +12,29 @@ import osc.androiddevacademy.movieapp.R
 import osc.androiddevacademy.movieapp.common.loadImage
 import osc.androiddevacademy.movieapp.database.MoviesDatabase
 import osc.androiddevacademy.movieapp.model.Movie
+import osc.androiddevacademy.movieapp.model.Review
 import osc.androiddevacademy.movieapp.model.ReviewsResponse
 import osc.androiddevacademy.movieapp.networking.BackendFactory
 import osc.androiddevacademy.movieapp.networking.interactors.MovieInteractor
+import osc.androiddevacademy.movieapp.presentation.DetailsPresenter
 import osc.androiddevacademy.movieapp.ui.adapters.ReviewAdapter
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
 class MovieDetailsFragment : Fragment(), DetailsContract.View {
+    override fun onSuccess(reviews: List<Review>) {
+        return reviewsAdapter.setReviewList(reviews)
+    }
+
+    override fun onFailure() {
+
+    }
 
     private val reviewsAdapter by lazy { ReviewAdapter() }
     private val apiInteractor: MovieInteractor by lazy { BackendFactory.getMovieInteractor() }
     private val appDatabase by lazy { MoviesDatabase.getInstance(App.getAppContext()) }
+    private val detailsPresenter:DetailsContract.Presenter by lazy { DetailsPresenter(BackendFactory.getMovieInteractor()) }
 
     companion object {
         private const val MOVIE_EXTRA = "movie_extra"
@@ -48,7 +58,7 @@ class MovieDetailsFragment : Fragment(), DetailsContract.View {
         super.onViewCreated(view, savedInstanceState)
 
         movie = arguments?.getParcelable(MOVIE_EXTRA) as Movie
-
+        detailsPresenter.setView(this)
         initUi()
         getReviews()
         initListeners()
@@ -78,21 +88,6 @@ class MovieDetailsFragment : Fragment(), DetailsContract.View {
     }
 
     private fun getReviews(){
-        apiInteractor.getReviewsForMovie(movie.id, reviewsCallback())
+        detailsPresenter.returnMovie(movie)
     }
-
-    private fun reviewsCallback(): Callback<ReviewsResponse> = object : Callback<ReviewsResponse>{
-        override fun onFailure(call: Call<ReviewsResponse>, t: Throwable) {
-            t.printStackTrace()
-        }
-
-        override fun onResponse(call: Call<ReviewsResponse>, response: Response<ReviewsResponse>) {
-            if (response.isSuccessful){
-                response.body()?.reviews?.run {
-                    reviewsAdapter.setReviewList(this)
-                }
-            }
-        }
-    }
-
 }

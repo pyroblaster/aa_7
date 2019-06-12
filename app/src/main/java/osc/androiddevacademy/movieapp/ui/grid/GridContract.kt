@@ -17,6 +17,6 @@ interface GridContract {
 
         fun getPopularMovies()
 
-        fun returnPopularMovies():ArrayList<Movie>
+        fun getFavoriteMovies():ArrayList<Movie>
     }
 }
